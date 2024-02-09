@@ -1,0 +1,163 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recorder</title>
+    <link href="static/bootstrap.min.css" rel="stylesheet" >
+    <link rel="stylesheet" href="static/recorder.css">
+    <link rel="stylesheet" href="static/avatar.css">
+  </head>
+  <body>
+    <h1>Asistente Virtual Dlux</h1>
+    <ol id="miLista">
+        <li style="--accent-color:#0D6EFD"  onclick="enviarNumeroAlServidor(0)" >
+            <div class="icon"><i class="fa-brands fa-medkit "></i></div>
+            <div class="title">Medico</div>
+            <div class="descr"><img  class="imagen" src="static/negro.jpg"></div>
+        </li>
+        <li style="--accent-color:#6710F5" onclick="enviarNumeroAlServidor(1)" >
+            <div class="icon"><i class="fa-brands fa-book"></i></div>
+            <div class="title">Profesor</div>
+            <div class="descr"><img  class="imagen" src="static/negro.jpg"></div>
+                </li>
+        <li style="--accent-color:#6F42C1" onclick="enviarNumeroAlServidor(2)" >
+            <div class="icon"><i class="fa-brands fa-futbol"></i></div>
+            <div class="title">Periodista  </div>
+            <div class="descr"><img  class="imagen" src="static/negro.jpg"></div>
+        </li>
+        <li style="--accent-color:#D63384" onclick="enviarNumeroAlServidor(3)" >
+            <div class="icon"><i class="fa-solid fa-user-group"></i></div>
+            <div class="title">Jose</div>
+            <div class="descr"><img  class="imagen" src="static/negro.jpg"></div>
+        </li>
+        <li style="--accent-color:#DC3545" onclick="enviarNumeroAlServidor(4)" >
+            <div class="icon"><i class="fa-brands fa-github"></i></div>
+            <div class="title">Asistente</div>
+            <div class="descr"><img  class="imagen" src="static/negro.jpg"></div>
+        </li>
+        
+        
+    </ol>
+    
+    <form id="myForm">
+        <input type="text" id="cadena" name="cadena">
+        <br>
+        <button class="buttonform" type="button" onclick="enviarCadena()">Enviar</button>
+    </form>
+
+   
+    <div class="container">
+
+        <div class="row mt-3 px-3">
+            <div class="col-12 text-center">
+                <button type="button" class="btn-record btn-record-green" id="record" onclick="record()">
+                    <img class="mic-img" src="static/img/microphone.png" />
+                </button>
+                <button  type="button" class="btn-record btn-record-red" id="stop" onclick="stop()" style="display:none">
+                    <img class="mic-img" id="record-stop-label" src="static/img/microphone.png" />
+                    <span id="record-stop-loading" style="display: none"><span class="spinner-border spinner-border-sm record-spinner" role="status" aria-hidden="true"></span></span>
+                </button>
+            </div>
+            <div class="col-12 text-center mt-2">
+                <div id="text"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+
+    <script src="static/recorder.js"></script>
+
+    <script type="text/javascript">
+        const listaItems = document.querySelectorAll('#miLista li');
+        listaItems.forEach(item => {
+        item.addEventListener('click', () => {      
+            listaItems.forEach(li => {
+            li.classList.remove('activo');
+            });
+            item.classList.add('activo');
+        });
+        });
+       
+
+        recorder("/audio", response => {
+            document.getElementById("record").style.display="";
+            document.getElementById("stop").style.display="none";
+            if (!response || response == null) {
+                //Hola mi creador no implemento algo bueno aqui hoho
+                console.log("No response");
+                return;
+            }
+            console.log("El texto fue: " + response.text)
+            document.getElementById("text").innerHTML = response.text;
+            if (typeof response.file !== "undefined") {
+               
+                audioFile = response.file;
+                 console.log("El:audio  " + audioFile);
+                let audio = new Audio();
+                audio.setAttribute("src", "static/" + audioFile);
+                audio.play();
+            }
+        });
+
+
+
+        function enviarNumeroAlServidor(miNumero) {
+            if(miNumero==4)
+             mostrarFormulario();
+            else
+            ocultarFormulario();
+            console.log("enviar "+miNumero);
+            fetch('/procesar_numero', {
+                method: 'POST', // Puedes usar 'GET' si lo prefieres
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ numero: miNumero })
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data); // Puedes manejar la respuesta del servidor aquí
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+
+
+        function enviarCadena() {
+            const cadena = document.getElementById("cadena").value;
+
+            fetch('/procesar_cadena', {
+                method: 'POST', // Puedes usar 'GET' si lo prefieres
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ cadena: cadena })
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data); // Puedes manejar la respuesta del servidor aquí
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function mostrarFormulario() {
+            const myForm = document.getElementById('myForm');
+            myForm.style.display = 'block';
+        }
+
+        // Función para ocultar el formulario
+        function ocultarFormulario() {
+            const myForm = document.getElementById('myForm');
+            myForm.style.display = 'none';
+}
+
+    </script>
+  </body>
+</html>
